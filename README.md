@@ -92,3 +92,8 @@ If you find a bug or want to raise a feature request, please do so via [the issu
 
 
 node main.js generate   --output-cloudformation "cloudformation.yml"   --output-terraform "terraform.hcl"   --output-raw-data "debug.json"  --region us-east-2  --exclude-services "CloudWatch,KMS"   --sort-output
+
+node cli/main.js generate   --output-cloudformation "cloudformation.yml"   --output-terraform "terraform.hcl"   --output-raw-data "debug.json"   --search-filter "myapp"   --exclude-services "CloudWatch,KMS"   --sort-output
+
+New and improved way, instead of using former 2, just use cli/main.js
+node cli/main.js generate   --output-cloudformation "cloudformation.yml"   --output-terraform "terraform.hcl"   --output-raw-data "debug.json"   --search-filter "myapp"   --exclude-services "CloudWatch,KMS"   --sort-output
