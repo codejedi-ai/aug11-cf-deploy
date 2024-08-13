@@ -2167,7 +2167,7 @@ function tfToCdktfProp(str) {
     }
     
     var split = str.split("_");
-    var ret = split.map(x => x[0].toUpperCase() + x.substr(1)).join('');
+    var ret = split.map(x => x[0] ? x[0].toUpperCase() : '' + x.substr(1)).join('');
     ret = ret[0].toLowerCase() + ret.substr(1);
 
     return ret;
@@ -2786,6 +2786,11 @@ function outputMapCli(service, method, options, region, was_blocked) {
 }
 
 async function generateDiagram() {
+    if (window && window.localStorage.getItem('uselocalstackendpoint') == "true") {
+        clearDiagram();
+        return;
+    }
+
     if (tracked_resources.length < 1) {
         clearDiagram();
         return;

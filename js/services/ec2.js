@@ -3612,19 +3612,158 @@ service_mapping_functions.push(function(reqParams, obj, tracked_resources){
             reqParams.tf['listener_arn'] = obj.data.ListenerArn;
             if (obj.data.Conditions) {
                 reqParams.cfn['Conditions'] = [];
-                reqParams.tf['condition'] = [];
+                reqParams.tf['condition'] = {};
                 obj.data.Conditions.forEach(condition => {
-                    reqParams.cfn['Conditions'].push({
-                        'Field': condition.Field,
-                        'Values': condition.Values
-                    });
-                    reqParams.tf['condition'].push({
-                        'field': condition.Field,
-                        'values': condition.Values
+                    var cfnblock = {
+                        'Field': condition.Field
+                    };
+
+                    if (condition.Field == "host-header") {
+                        cfnblock['HostHeaderConfig'] = {
+                            'Values': condition.HostHeaderConfig.Values
+                        };
+                        reqParams.tf['condition']['host_header'] = {
+                            'values': condition.HostHeaderConfig.Values
+                        };
+                    } else if (condition.Field == "http-header") {
+                        cfnblock['HttpHeaderConfig'] = {
+                            'HttpHeaderName': condition.HttpHeaderConfig.HttpHeaderName,
+                            'Values': condition.HttpHeaderConfig.Values
+                        };
+                        reqParams.tf['condition']['http_header'] = {
+                            'http_header_name': condition.HttpHeaderConfig.HttpHeaderName,
+                            'values': condition.HttpHeaderConfig.Values
+                        };
+                    } else if (condition.Field == "http-request-method") {
+                        cfnblock['HttpRequestMethodConfig'] = {
+                            'Values': condition.HttpRequestMethodConfig.Values
+                        };
+                        reqParams.tf['condition']['http_request_method'] = {
+                            'values': condition.HttpRequestMethodConfig.Values
+                        };
+                    } else if (condition.Field == "path-pattern") {
+                        cfnblock['PathPatternConfig'] = {
+                            'Values': condition.PathPatternConfig.Values
+                        };
+                        reqParams.tf['condition']['path_pattern'] = {
+                            'values': condition.PathPatternConfig.Values
+                        };
+                    } else if (condition.Field == "query-string") {
+                        cfnblock['QueryStringConfig'] = {
+                            'Values': condition.QueryStringConfig.Values
+                        };
+                        if (condition.QueryStringConfig.Values) {
+                            var values = [];
+                            for (var val of condition.QueryStringConfig.Values) {
+                                values.push({
+                                    'key': val.Key,
+                                    'value': val.Value
+                                });
+                            }
+                            /*reqParams.tf['condition']['query_string'] = {
+                                'values': values
+                            };*/
+                            reqParams.tf['condition']['query_string'] = new Set(values);
+                        }
+                    } else if (condition.Field == "source-ip") {
+                        cfnblock['SourceIpConfig'] = {
+                            'Values': condition.SourceIpConfig.Values
+                        };
+                        reqParams.tf['condition']['source_ip'] = {
+                            'values': condition.SourceIpConfig.Values
+                        };
+                    }
+
+                    reqParams.cfn['Conditions'].push(cfnblock);
+                });
+            }
+            if (obj.data.Actions) {
+                reqParams.cfn['Actions'] = obj.data.Actions;
+                reqParams.tf['action'] = [];
+                obj.data.Actions.forEach(action => {
+                    var forward = null;
+                    if (action.ForwardConfig) {
+                        var targetgroups = null;
+                        if (action.ForwardConfig.TargetGroups) {
+                            targetgroups = [];
+                            action.ForwardConfig.TargetGroups.forEach(targetgroup => {
+                                targetgroups.push({
+                                    'arn': targetgroup.TargetGroupArn,
+                                    'weight': targetgroup.Weight
+                                });
+                            });
+                        }
+                        var targetgroupstickinessconfig = null;
+                        if (action.ForwardConfig.TargetGroupStickinessConfig) {
+                            targetgroupstickinessconfig = {
+                                'duration': action.ForwardConfig.TargetGroupStickinessConfig.DurationSeconds,
+                                'enabled': action.ForwardConfig.TargetGroupStickinessConfig.Enabled
+                            };
+                        }
+                        forward = {
+                            'target_group': targetgroups,
+                            'stickiness': targetgroupstickinessconfig
+                        };
+                    }
+                    var redirect = null;
+                    if (action.RedirectConfig) {
+                        redirect = {
+                            'host': action.RedirectConfig.Host,
+                            'path': action.RedirectConfig.Path,
+                            'port': action.RedirectConfig.Port,
+                            'protocol': action.RedirectConfig.Protocol,
+                            'query': action.RedirectConfig.Query,
+                            'status_code': action.RedirectConfig.StatusCode,
+                        };
+                    }
+                    var fixedresponse = null;
+                    if (action.FixedResponseConfig) {
+                        fixedresponse = {
+                            'content_type': action.FixedResponseConfig.ContentType,
+                            'message_body': action.FixedResponseConfig.MessageBody,
+                            'status_code': action.FixedResponseConfig.StatusCode
+                        };
+                    }
+                    var authcognito = null;
+                    if (action.AuthenticateCognitoConfig) {
+                        authcognito = {
+                            'authentication_request_extra_params': action.AuthenticateCognitoConfig.AuthenticationRequestExtraParams,
+                            'on_unauthenticated_request': action.AuthenticateCognitoConfig.OnUnauthenticatedRequest,
+                            'scope': action.AuthenticateCognitoConfig.Scope,
+                            'session_cookie_name': action.AuthenticateCognitoConfig.SessionCookieName,
+                            'session_timeout': action.AuthenticateCognitoConfig.SessionTimeout,
+                            'user_pool_arn': action.AuthenticateCognitoConfig.UserPoolArn,
+                            'user_pool_client_id': action.AuthenticateCognitoConfig.UserPoolClientId,
+                            'user_pool_domain': action.AuthenticateCognitoConfig.UserPoolDomain
+                        };
+                    }
+                    var authoidc = null;
+                    if (action.AuthenticateOidcConfig) {
+                        authoidc = {
+                            'authentication_request_extra_params': action.AuthenticateOidcConfig.AuthenticationRequestExtraParams,
+                            'authorization_endpoint': action.AuthenticateOidcConfig.AuthorizationEndpoint,
+                            'client_id': action.AuthenticateOidcConfig.ClientId,
+                            'client_secret': action.AuthenticateOidcConfig.ClientSecret,
+                            'issuer': action.AuthenticateOidcConfig.Issuer,
+                            'on_unauthenticated_request': action.AuthenticateOidcConfig.OnUnauthenticatedRequest,
+                            'scope': action.AuthenticateOidcConfig.Scope,
+                            'session_cookie_name': action.AuthenticateOidcConfig.SessionCookieName,
+                            'session_timeout': action.AuthenticateOidcConfig.SessionTimeout,
+                            'token_endpoint': action.AuthenticateOidcConfig.TokenEndpoint,
+                            'user_info_endpoint': action.AuthenticateOidcConfig.UserInfoEndpoint
+                        };
+                    }
+                    reqParams.tf['action'].push({
+                        'type': action.Type,
+                        'target_group_arn': action.TargetGroupArn,
+                        'forward': forward,
+                        'redirect': redirect,
+                        'fixed_response': fixedresponse,
+                        'authenticate_cognito': authcognito,
+                        'authenticate_oidc': authoidc
                     });
                 });
             }
-            reqParams.cfn['Actions'] = obj.data.Actions;
 
             reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
             if (obj.data.Tags) {

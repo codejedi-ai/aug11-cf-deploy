@@ -410,7 +410,10 @@ service_mapping_functions.push(function(reqParams, obj, tracked_resources){
             'terraformType': 'aws_organizations_organizational_unit',
             'options': reqParams,
             'returnValues': {
-                'Ref': obj.data.Id
+                'Ref': obj.data.Id,
+                'Import': {
+                    'Id': obj.data.Id
+                }
             }
         });
     } else if (obj.type == "organizations.account") {
@@ -443,16 +446,27 @@ service_mapping_functions.push(function(reqParams, obj, tracked_resources){
             'terraformType': 'aws_organizations_account',
             'options': reqParams,
             'returnValues': {
-                'Ref': obj.data.Id
+                'Ref': obj.data.Id,
+                'Import': {
+                    'AccountId': obj.data.Id
+                }
             }
         });
     } else if (obj.type == "organizations.policy") {
-        reqParams.cfn['Content'] = obj.data.Content;
+        var spacinglength = 4;
+        try {
+            var spacingamount = window.localStorage.getItem('cfnspacing');
+            if (spacingamount && spacingamount == 2) {
+                spacinglength = 2;
+            }
+        } catch(e) {};
+
+        reqParams.cfn['Content'] = JSON.stringify(JSON.parse(obj.data.Content), null, spacinglength);
         reqParams.cfn['Name'] = obj.data.PolicySummary.Name;
         reqParams.cfn['Description'] = obj.data.PolicySummary.Description;
         reqParams.cfn['Type'] = obj.data.PolicySummary.Type;
         reqParams.cfn['TargetIds'] = obj.data.TargetIds;
-        reqParams.tf['content'] = obj.data.Content;
+        reqParams.tf['content'] = JSON.stringify(JSON.parse(obj.data.Content), null, spacinglength);
         reqParams.tf['name'] = obj.data.PolicySummary.Name;
         reqParams.tf['description'] = obj.data.PolicySummary.Description;
         reqParams.tf['type'] = obj.data.PolicySummary.Type;
@@ -464,7 +478,12 @@ service_mapping_functions.push(function(reqParams, obj, tracked_resources){
             'service': 'organizations',
             'type': 'AWS::Organizations::Policy',
             'terraformType': 'aws_organizations_policy',
-            'options': reqParams
+            'options': reqParams,
+            'returnValues': {
+                'Import': {
+                    'Id': obj.data.PolicySummary.Id
+                }
+            }
         });
     } else if (obj.type == "organizations.policyattachment") {
         reqParams.tf['policy_id'] = obj.data.PolicyId;

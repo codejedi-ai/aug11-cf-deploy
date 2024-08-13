@@ -1,6 +1,6 @@
 # Former2
 
-[![CloudFormation](https://img.shields.io/badge/CloudFormation-100%25-orange.svg)](RESOURCE_COVERAGE.md#cloudformation-resource-coverage) [![Terraform](https://img.shields.io/badge/Terraform-49%25-blue.svg)](RESOURCE_COVERAGE.md#terraform-coverage)
+[![CloudFormation](https://img.shields.io/badge/CloudFormation-84%25-orange.svg)](RESOURCE_COVERAGE.md#cloudformation-resource-coverage) [![Terraform](https://img.shields.io/badge/Terraform-49%25-blue.svg)](RESOURCE_COVERAGE.md#terraform-coverage)
 
 > Generate CloudFormation / Terraform / Troposphere templates from your existing AWS resources
 
@@ -48,6 +48,25 @@ The following outputs are currently supported:
 
 A command-line version of Former2 with limited functionality is available for installation. For more information, see the [CLI instructions](cli/README.md).
 
+### LocalStack Support
+
+To enable support for use against [LocalStack](https://docs.localstack.cloud/references/network-troubleshooting/endpoint-url/) endpoints, enable the setting in the Settings page, ensure you are using the Former2 Helper extension/add-on, and add the following [configuration](https://docs.localstack.cloud/references/configuration/) to LocalStack:
+
+_For Google Chrome:_
+```
+EXTRA_CORS_ALLOWED_ORIGINS=chrome-extension://fhejmeojlbhfhjndnkkleooeejklmigi
+```
+
+_For Mozilla Firefox:_
+```
+EXTRA_CORS_ALLOWED_ORIGINS=moz-extension://853c673f-1bd8-4226-a5ff-f1473f7b3d90
+```
+
+_For Microsoft Edge:_
+```
+EXTRA_CORS_ALLOWED_ORIGINS=extension://okkjnfohglnomdbpimkcdkiojbeiedof
+```
+
 ## Security
 
 Former2 does not create any resources within your AWS account.
@@ -69,3 +88,7 @@ Though Former2 is free to access or use locally, some [AWS services](https://aws
 **I found an issue / I'm missing an output / Something's wrong. Can you help?**
 
 If you find a bug or want to raise a feature request, please do so via [the issues page](https://github.com/iann0036/former2/issues).
+
+
+
+node main.js generate   --output-cloudformation "cloudformation.yml"   --output-terraform "terraform.hcl"   --output-raw-data "debug.json"  --region us-east-2  --exclude-services "CloudWatch,KMS"   --sort-output
